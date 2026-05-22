@@ -1,0 +1,2116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AaaS Console | Universal Agent Chassis</title>
+  <meta name="description" content="Consola universal premium para orquestar agentes de IA en la arquitectura Spoke-Hub AaaS.">
+
+  <!-- CDNs -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind Config -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            title: ['Outfit', 'sans-serif'],
+            body: ['Plus Jakarta Sans', 'sans-serif'],
+          },
+          colors: {
+            primary: 'var(--color-primary, #6366f1)',
+            secondary: 'var(--color-secondary, #a855f7)',
+            accent: 'var(--color-accent, #10b981)',
+            darkbg: '#07080c',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* ===== DESIGN TOKENS ===== */
+    :root {
+      --color-primary: #6366f1;
+      --color-secondary: #a855f7;
+      --color-accent: #10b981;
+      --panel-radius: 20px;
+      --card-radius: 16px;
+      --input-radius: 14px;
+    }
+
+    body {
+      background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.16), transparent 34rem),
+        linear-gradient(135deg, #050609 0%, #0c1118 48%, #07100d 100%);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    /* ===== SCROLLBAR ===== */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--color-primary); }
+
+    /* ===== GLASSMORPHISM ===== */
+    .glass-panel {
+      background: rgba(13, 16, 23, 0.55);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: var(--panel-radius);
+    }
+    .glass-card {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: var(--card-radius);
+    }
+    .glass-input {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: var(--input-radius);
+      transition: all 0.3s ease;
+    }
+    .glass-input:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.12), 0 0 20px rgba(99,102,241,0.08);
+    }
+
+    .agent-select {
+      appearance: none;
+      background-image:
+        linear-gradient(45deg, transparent 50%, rgba(255,255,255,0.7) 50%),
+        linear-gradient(135deg, rgba(255,255,255,0.7) 50%, transparent 50%);
+      background-position:
+        calc(100% - 18px) 50%,
+        calc(100% - 12px) 50%;
+      background-size: 6px 6px, 6px 6px;
+      background-repeat: no-repeat;
+      padding-right: 2.25rem;
+    }
+
+    .agent-chip {
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.035);
+      border-radius: 10px;
+    }
+
+    /* ===== SKELETON LOADERS ===== */
+    .skeletor {
+      background: linear-gradient(90deg, rgba(255,255,255,0.02) 25%, rgba(255,255,255,0.07) 50%, rgba(255,255,255,0.02) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 8px;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ===== MIC PULSE ===== */
+    .mic-active {
+      animation: micPulse 1.4s infinite ease-in-out;
+      background: #ef4444 !important;
+      border-color: #ef4444 !important;
+    }
+    @keyframes micPulse {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239,68,68,0.7); }
+      70% { transform: scale(1.08); box-shadow: 0 0 0 12px rgba(239,68,68,0); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+    }
+
+    /* ===== TYPING DOTS ===== */
+    .dot-pulse { animation: dotPulse 1.2s infinite ease-in-out; }
+    .dot-pulse:nth-child(2) { animation-delay: 0.2s; }
+    .dot-pulse:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dotPulse {
+      0%, 100% { transform: translateY(0); opacity: 0.3; }
+      50% { transform: translateY(-6px); opacity: 1; }
+    }
+
+    /* ===== TOAST SYSTEM ===== */
+    .toast-container {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      pointer-events: none;
+    }
+    .toast-item {
+      pointer-events: auto;
+      min-width: 320px;
+      max-width: 420px;
+      padding: 1rem 1.25rem;
+      border-radius: var(--card-radius);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(239,68,68,0.25);
+      background: rgba(15,10,10,0.85);
+      box-shadow: 0 8px 32px rgba(239,68,68,0.1), 0 0 0 1px rgba(239,68,68,0.08);
+      animation: toastIn 0.45s cubic-bezier(0.21,1.02,0.73,1) forwards;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+    .toast-item.toast-success {
+      border-color: rgba(16,185,129,0.25);
+      background: rgba(10,15,10,0.85);
+      box-shadow: 0 8px 32px rgba(16,185,129,0.1), 0 0 0 1px rgba(16,185,129,0.08);
+    }
+    .toast-item.toast-exit {
+      animation: toastOut 0.35s cubic-bezier(0.4,0,1,1) forwards;
+    }
+    @keyframes toastIn {
+      0% { opacity: 0; transform: translateX(100px) scale(0.95); }
+      100% { opacity: 1; transform: translateX(0) scale(1); }
+    }
+    @keyframes toastOut {
+      0% { opacity: 1; transform: translateX(0) scale(1); }
+      100% { opacity: 0; transform: translateX(100px) scale(0.9); }
+    }
+
+    /* ===== LOCK SCREEN ===== */
+    .lock-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      background: #050609;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .lock-card {
+      max-width: 520px;
+      width: 100%;
+      background: rgba(13,16,23,0.7);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      padding: 3rem 2.5rem;
+      text-align: center;
+      animation: lockFadeIn 0.6s ease-out;
+      position: relative;
+      overflow: hidden;
+    }
+    .lock-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--color-primary), var(--color-secondary), var(--color-primary));
+      background-size: 200% 100%;
+      animation: gradientSlide 3s linear infinite;
+    }
+    @keyframes gradientSlide {
+      0% { background-position: 0% 0; }
+      100% { background-position: 200% 0; }
+    }
+    @keyframes lockFadeIn {
+      0% { opacity: 0; transform: translateY(30px) scale(0.96); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .lock-example {
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+    .lock-example:hover {
+      background: rgba(99,102,241,0.15) !important;
+      border-color: rgba(99,102,241,0.4) !important;
+      transform: translateY(-2px);
+    }
+
+    /* ===== MARKDOWN PROSE ===== */
+    .prose table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.85rem; }
+    .prose th, .prose td { border: 1px solid rgba(255,255,255,0.08); padding: 0.55rem 0.85rem; text-align: left; }
+    .prose th { background: rgba(255,255,255,0.03); color: #fff; font-weight: 600; }
+    .prose tr:nth-child(even) { background: rgba(255,255,255,0.01); }
+    .prose code { background: rgba(0,0,0,0.35); padding: 0.15rem 0.4rem; border-radius: 5px; font-family: 'JetBrains Mono', monospace; color: #f472b6; font-size: 0.85em; }
+    .prose pre code { background: transparent; padding: 0; color: inherit; }
+    .prose ul, .prose ol { padding-left: 1.5rem; margin: 0.5rem 0; }
+    .prose li { margin-bottom: 0.25rem; }
+    .prose blockquote { border-left: 3px solid var(--color-primary); padding-left: 1rem; margin: 0.75rem 0; color: rgba(255,255,255,0.7); font-style: italic; }
+    .prose h1, .prose h2, .prose h3 { font-family: 'Outfit', sans-serif; margin: 0.75rem 0 0.35rem; }
+    .prose p { margin-bottom: 0.5rem; line-height: 1.65; }
+    .prose a { color: var(--color-primary); text-decoration: none; font-weight: 600; }
+    .prose a:hover { text-decoration: underline; }
+
+    /* ===== MESSAGE ANIMATIONS ===== */
+    .msg-enter {
+      animation: msgSlideIn 0.4s cubic-bezier(0.21,1.02,0.73,1) forwards;
+    }
+    @keyframes msgSlideIn {
+      0% { opacity: 0; transform: translateY(20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== FADE OUT ===== */
+    @keyframes fadeOut {
+      0% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    /* ===== RESOURCE CARD HOVER ===== */
+    .resource-card-interactive {
+      transition: all 0.3s ease;
+    }
+    .resource-card-interactive:hover {
+      border-color: rgba(255,255,255,0.12) !important;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    }
+
+    /* ===== SIDEBAR TABS ===== */
+    .sidebar-tab {
+      color: rgba(156,163,175,0.7);
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+    .sidebar-tab:hover {
+      color: #e5e7eb;
+      background: rgba(255,255,255,0.04);
+    }
+    .sidebar-tab.active {
+      background: rgba(99,102,241,0.15);
+      color: var(--color-primary);
+      border-color: rgba(99,102,241,0.25);
+      box-shadow: 0 2px 8px rgba(99,102,241,0.1);
+    }
+    .sidebar-tab-content {
+      animation: tabFadeIn 0.25s ease-out;
+    }
+    @keyframes tabFadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== AGENT CARD ===== */
+    .agent-card-item {
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.05);
+      background: rgba(0,0,0,0.2);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .agent-card-item:hover {
+      border-color: rgba(99,102,241,0.35);
+      background: rgba(99,102,241,0.06);
+      transform: translateX(3px);
+    }
+    .agent-card-item.active-agent {
+      border-color: rgba(99,102,241,0.5);
+      background: rgba(99,102,241,0.12);
+      box-shadow: 0 0 12px rgba(99,102,241,0.08);
+    }
+    .agent-card-item .agent-number {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body class="text-gray-100 flex flex-col h-screen overflow-hidden font-body">
+
+  <!-- ===================== -->
+  <!-- LOCK SCREEN (No ID)   -->
+  <!-- ===================== -->
+  <div id="lock-screen" class="lock-screen hidden">
+    <div class="lock-card">
+      <div class="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+        <i data-lucide="shield-alert" class="w-8 h-8 text-white"></i>
+      </div>
+      <h1 class="font-title text-2xl font-bold text-white mb-2">Identificación Requerida</h1>
+      <p class="text-gray-400 text-sm leading-relaxed mb-6">
+        Esta consola opera bajo la arquitectura <span class="text-indigo-400 font-semibold">AaaS (Agent as a Service)</span>. 
+        Para iniciar, debes proporcionar el identificador de tu agente en la barra de direcciones.
+      </p>
+
+      <div class="glass-card p-4 mb-6 text-left">
+        <div class="text-[10px] uppercase tracking-widest font-bold text-gray-500 mb-3">Formato de acceso</div>
+        <code class="block text-xs text-indigo-300 bg-black/40 p-3 rounded-lg font-mono mb-3 break-all">
+          index.html<span class="text-purple-400">?id=</span><span class="text-emerald-400">[tu_identificador]</span>
+        </code>
+        <div class="text-[10px] uppercase tracking-widest font-bold text-gray-500 mb-2 mt-4">Ejemplos interactivos</div>
+        <div class="space-y-2">
+          <div class="lock-example flex items-center gap-2 p-2.5 rounded-lg bg-black/25 border border-white/5 text-xs" onclick="window.location.href='?id=1'">
+            <span class="w-6 h-6 rounded-md bg-indigo-500/15 flex items-center justify-center text-indigo-400"><i data-lucide="hash" class="w-3.5 h-3.5"></i></span>
+            <code class="text-gray-300 font-mono">?id=1</code>
+            <span class="text-gray-500 ml-auto">Agente #1</span>
+          </div>
+          <div class="lock-example flex items-center gap-2 p-2.5 rounded-lg bg-black/25 border border-white/5 text-xs" onclick="window.location.href='?id=18'">
+            <span class="w-6 h-6 rounded-md bg-purple-500/15 flex items-center justify-center text-purple-400"><i data-lucide="hash" class="w-3.5 h-3.5"></i></span>
+            <code class="text-gray-300 font-mono">?id=18</code>
+            <span class="text-gray-500 ml-auto">Agente #18</span>
+          </div>
+          <div class="lock-example flex items-center gap-2 p-2.5 rounded-lg bg-black/25 border border-white/5 text-xs" onclick="window.location.href='?id=AaaS-HOMERO-v5'">
+            <span class="w-6 h-6 rounded-md bg-emerald-500/15 flex items-center justify-center text-emerald-400"><i data-lucide="hash" class="w-3.5 h-3.5"></i></span>
+            <code class="text-gray-300 font-mono">?id=AaaS-HOMERO-v5</code>
+            <span class="text-gray-500 ml-auto">Homero v5</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 justify-center text-[10px] text-gray-600">
+        <i data-lucide="lock" class="w-3 h-3"></i>
+        <span>Consola protegida bajo contrato de seguridad AaaS</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== -->
+  <!-- TOAST CONTAINER       -->
+  <!-- ===================== -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- ===================== -->
+  <!-- MAIN APP LAYOUT       -->
+  <!-- ===================== -->
+  <div id="app-shell" class="flex-1 flex overflow-hidden p-3 md:p-5 gap-4 h-full w-full">
+    
+    <!-- SIDEBAR -->
+    <aside id="sidebar-panel" class="w-[320px] glass-panel flex flex-col hidden lg:flex overflow-hidden sidebar-redesign">
+      
+      <!-- Brand Header — compact & always visible -->
+      <div class="px-4 pt-4 pb-3 shrink-0">
+        <div class="flex items-center gap-3">
+          <div id="brand-logo" class="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary to-secondary flex items-center justify-center shadow-lg relative overflow-hidden flex-shrink-0">
+            <i data-lucide="cpu" class="w-4.5 h-4.5 text-white"></i>
+          </div>
+          <div class="min-w-0 flex-1">
+            <h2 class="font-title font-bold text-sm leading-none bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent truncate">AaaS Engine</h2>
+            <div class="flex items-center gap-2 mt-1">
+              <span id="api-status-badge" class="text-[8px] px-1.5 py-0.5 rounded-full font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">Handshake...</span>
+              <span class="text-[9px] text-gray-500">•</span>
+              <span class="text-[9px] text-gray-500">ID: <span id="sidebar-agent-id" class="font-mono text-indigo-400 font-bold">—</span></span>
+            </div>
+          </div>
+          <button onclick="navigator.clipboard.writeText(URL_API + '?a=' + idAgente); showToast('Enlace copiado', 'success', 1500)" title="Copiar Enlace Endpoint" class="w-8 h-8 rounded-lg border border-white/8 hover:border-primary/50 hover:bg-primary/10 flex items-center justify-center text-gray-500 hover:text-primary transition-all flex-shrink-0">
+            <i data-lucide="link" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+        <div id="endpoint-display" class="hidden"></div>
+      </div>
+
+      <!-- Tab Navigation -->
+      <div class="px-3 shrink-0">
+        <div class="flex bg-black/30 rounded-xl p-1 gap-0.5 border border-white/5" id="sidebar-tabs">
+          <button data-tab="agents" class="sidebar-tab active flex-1 text-[10px] font-bold py-2 rounded-lg flex items-center justify-center gap-1.5 transition-all">
+            <i data-lucide="bot" class="w-3.5 h-3.5"></i>
+            Agentes
+          </button>
+          <button data-tab="history" class="sidebar-tab flex-1 text-[10px] font-bold py-2 rounded-lg flex items-center justify-center gap-1.5 transition-all">
+            <i data-lucide="history" class="w-3.5 h-3.5"></i>
+            Historial
+          </button>
+          <button data-tab="resources" class="sidebar-tab flex-1 text-[10px] font-bold py-2 rounded-lg flex items-center justify-center gap-1.5 transition-all">
+            <i data-lucide="folder-open" class="w-3.5 h-3.5"></i>
+            Recursos
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab Content Area -->
+      <div class="flex-1 overflow-hidden flex flex-col mt-3">
+
+        <!-- TAB: Agents -->
+        <div id="tab-agents" class="sidebar-tab-content active flex-1 flex flex-col overflow-hidden px-4">
+          <!-- Active Agent Chip -->
+          <div class="agent-chip p-2.5 flex items-center gap-2.5 mb-3 shrink-0 border-primary/30 bg-primary/5">
+            <div class="w-9 h-9 rounded-lg bg-gradient-to-tr from-primary to-secondary flex items-center justify-center flex-shrink-0 shadow-md">
+              <i data-lucide="sparkles" class="w-4 h-4 text-white"></i>
+            </div>
+            <div class="min-w-0 flex-1">
+              <div id="tenant-name-input" class="font-semibold text-gray-100 text-xs truncate">Cargando...</div>
+              <div class="text-[9px] text-gray-500 mt-0.5">Agente activo actualmente</div>
+            </div>
+          </div>
+          <!-- Agent Search -->
+          <div class="relative mb-3 shrink-0">
+            <i data-lucide="search" class="w-3.5 h-3.5 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+            <input type="text" id="agent-search-input" placeholder="Buscar agente..." class="w-full h-9 pl-9 pr-3 text-[11px] glass-input text-white placeholder-gray-600 rounded-lg">
+          </div>
+          <!-- Hidden select for logic compatibility -->
+          <select id="agent-select" class="hidden"></select>
+          <!-- Agent Grid -->
+          <div id="agent-grid" class="flex-1 overflow-y-auto space-y-1.5 pr-1 pb-2">
+            <div class="text-center py-5 text-gray-600 italic text-[10px]">Cargando agentes...</div>
+          </div>
+        </div>
+
+        <!-- TAB: History -->
+        <div id="tab-history" class="sidebar-tab-content flex-1 flex flex-col overflow-hidden px-4" style="display:none;">
+          <div class="flex items-center justify-between mb-3 shrink-0">
+            <span class="text-[11px] font-semibold text-gray-300">Conversaciones</span>
+            <div class="flex items-center gap-1.5">
+              <button id="btn-clear-all-sessions" title="Eliminar todos los chats" class="w-7 h-7 rounded-lg border border-white/5 hover:border-red-500/35 hover:bg-red-500/10 flex items-center justify-center text-gray-500 hover:text-red-300 transition-all">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              </button>
+              <button id="btn-new-session" class="text-[10px] px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-primary to-secondary hover:brightness-110 text-white font-semibold flex items-center gap-1.5 shadow-md transition-all">
+                <i data-lucide="plus" class="w-3 h-3"></i>
+                Nuevo Chat
+              </button>
+            </div>
+          </div>
+          <div id="session-history-list" class="flex-1 overflow-y-auto space-y-1.5 pr-1 pb-2">
+            <div class="text-center py-8 text-gray-600 italic text-[10px]">
+              <i data-lucide="message-square-dashed" class="w-8 h-8 mx-auto mb-2 text-gray-700"></i>
+              <p>Sin sesiones previas.</p>
+              <p class="mt-1 text-gray-700">Inicia una conversación para verla aquí.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: Resources -->
+        <div id="tab-resources" class="sidebar-tab-content flex-1 flex flex-col overflow-hidden px-4" style="display:none;">
+          <div class="flex items-center justify-between mb-3 shrink-0">
+            <span class="text-[11px] font-semibold text-gray-300">Catálogo</span>
+            <span id="catalog-count" class="text-[9px] px-2 py-0.5 rounded-full bg-white/5 border border-white/8 text-gray-400 font-mono font-bold">0</span>
+          </div>
+          <div id="resources-catalog-list" class="flex-1 overflow-y-auto space-y-2 pr-1 text-xs pb-2">
+            <div class="text-center py-8 text-gray-600 italic text-[10px]">
+              <i data-lucide="archive" class="w-8 h-8 mx-auto mb-2 text-gray-700"></i>
+              <p>Sin recursos cargados.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="text-[8px] text-gray-600 text-center font-mono py-2.5 border-t border-white/5 shrink-0 px-4">
+        AaaS Universal Chassis - Versión 1
+      </div>
+    </aside>
+
+    <!-- MAIN CHAT AREA -->
+    <main id="main-chat-area" class="flex-1 flex flex-col glass-panel overflow-hidden relative">
+      
+      <!-- Header -->
+      <header class="p-4 md:px-6 md:py-4 border-b border-white/5 flex items-center justify-between bg-black/10">
+        <div class="flex items-center gap-3">
+          <div id="agent-avatar" class="w-11 h-11 rounded-xl bg-gradient-to-tr from-primary to-secondary flex items-center justify-center shadow-md border border-white/10 overflow-hidden flex-shrink-0">
+            <i data-lucide="bot" class="w-5.5 h-5.5 text-white"></i>
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <h1 id="agent-display-name" class="font-title font-bold text-base text-white truncate">Agente Inteligente</h1>
+              <span id="tenant-pill" class="text-[8px] px-1.5 py-0.5 rounded-full font-extrabold uppercase tracking-wide bg-primary/10 text-primary border border-primary/20 flex-shrink-0">AaaS</span>
+            </div>
+            <div class="flex items-center gap-1.5 mt-0.5 text-xs text-gray-400">
+              <span id="status-dot" class="w-2 h-2 rounded-full bg-accent animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.7)]"></span>
+              <span id="agent-status-text">Listo para recibir instrucciones</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1.5">
+          <button id="btn-copy-latest" title="Copiar última respuesta" class="w-8 h-8 rounded-lg border border-white/5 hover:border-white/15 hover:bg-white/5 flex items-center justify-center text-gray-500 hover:text-white transition-all">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+          </button>
+          <button id="btn-clear-chat" title="Nuevo Chat" class="w-8 h-8 rounded-lg border border-white/5 hover:border-white/15 hover:bg-white/5 flex items-center justify-center text-gray-500 hover:text-white transition-all">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          </button>
+          <button id="btn-toggle-sidebar" class="w-8 h-8 rounded-lg border border-white/5 hover:border-white/15 hover:bg-white/5 flex items-center justify-center text-gray-500 hover:text-white transition-all">
+            <i data-lucide="panel-left" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- SKELETON OVERLAY -->
+      <section id="handshake-skeletor-overlay" class="absolute inset-0 z-50 bg-[#07080c] flex flex-col p-5 gap-5">
+        <div class="flex items-center justify-between pb-4 border-b border-white/5">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl skeletor"></div>
+            <div class="space-y-1.5">
+              <div class="w-32 h-4 rounded skeletor"></div>
+              <div class="w-20 h-2.5 rounded skeletor"></div>
+            </div>
+          </div>
+          <div class="w-20 h-7 rounded-lg skeletor"></div>
+        </div>
+        <div class="flex-1 flex flex-col gap-5 py-4 overflow-hidden">
+          <div class="flex items-start gap-3 max-w-md">
+            <div class="w-9 h-9 rounded-lg skeletor flex-shrink-0"></div>
+            <div class="space-y-2 flex-1">
+              <div class="w-3/4 h-3 rounded skeletor"></div>
+              <div class="w-full h-3 rounded skeletor"></div>
+              <div class="w-1/2 h-3 rounded skeletor"></div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 max-w-sm ml-auto justify-end">
+            <div class="space-y-2 w-3/4">
+              <div class="w-full h-3 rounded skeletor"></div>
+              <div class="w-4/5 h-3 rounded skeletor"></div>
+            </div>
+            <div class="w-9 h-9 rounded-lg skeletor flex-shrink-0"></div>
+          </div>
+          <div class="flex items-start gap-3 max-w-md">
+            <div class="w-9 h-9 rounded-lg skeletor flex-shrink-0"></div>
+            <div class="space-y-2.5 flex-1">
+              <div class="w-full h-3 rounded skeletor"></div>
+              <div class="w-full h-28 rounded-xl border border-white/5 p-4 flex gap-3">
+                <div class="w-14 h-14 rounded-lg skeletor flex-shrink-0"></div>
+                <div class="space-y-2 flex-1">
+                  <div class="w-1/2 h-3.5 rounded skeletor"></div>
+                  <div class="w-full h-2.5 rounded skeletor"></div>
+                  <div class="w-2/3 h-2.5 rounded skeletor"></div>
+                  <div class="w-16 h-5 rounded skeletor mt-1"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="h-14 rounded-xl skeletor w-full mt-auto"></div>
+      </section>
+
+      <!-- CHAT MESSAGES -->
+      <section id="chat-messages-container" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-5"></section>
+
+      <!-- TYPING INDICATOR -->
+      <div id="ai-typing-indicator" class="px-5 py-2 flex items-center gap-2 hidden">
+        <div class="w-7 h-7 rounded-lg bg-black/30 flex items-center justify-center border border-white/5">
+          <i data-lucide="bot" class="w-4 h-4 text-secondary"></i>
+        </div>
+        <div class="px-3.5 py-2 rounded-2xl bg-black/20 border border-white/5 flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 bg-gray-400 rounded-full dot-pulse"></span>
+          <span class="w-1.5 h-1.5 bg-gray-400 rounded-full dot-pulse"></span>
+          <span class="w-1.5 h-1.5 bg-gray-400 rounded-full dot-pulse"></span>
+        </div>
+        <span class="text-[10px] text-gray-500 ml-1">El agente está analizando...</span>
+      </div>
+
+      <!-- INPUT FOOTER -->
+      <footer class="p-3.5 md:p-4 border-t border-white/5 bg-black/10 relative">
+        <div id="attachment-preview" class="hidden mb-2 w-fit max-w-full items-center gap-2 px-3 py-1.5 rounded-lg bg-black/80 backdrop-blur-md border border-white/10 shadow-lg">
+          <i data-lucide="paperclip" class="w-3.5 h-3.5 text-gray-400"></i>
+          <span id="attachment-name" class="text-[11px] text-gray-300 truncate max-w-[150px]"></span>
+          <button type="button" id="btn-remove-attachment" class="text-gray-500 hover:text-red-400 ml-1">
+            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+        <form id="chat-message-form" class="flex items-center gap-2">
+          <button type="button" id="btn-attach-file" title="Adjuntar Archivo" class="w-11 h-11 rounded-xl border border-white/6 hover:border-white/15 bg-white/[0.03] flex items-center justify-center text-gray-400 hover:text-white transition-all cursor-pointer flex-shrink-0">
+            <i data-lucide="paperclip" class="w-4.5 h-4.5"></i>
+          </button>
+          <input type="file" id="file-upload-input" accept="image/*,application/pdf" class="hidden">
+          <button type="button" id="btn-voice-input" title="Dictar mensaje" class="w-11 h-11 rounded-xl border border-white/6 hover:border-white/15 bg-white/[0.03] flex items-center justify-center text-gray-400 hover:text-white transition-all cursor-pointer flex-shrink-0">
+            <i id="mic-icon" data-lucide="mic" class="w-4.5 h-4.5"></i>
+          </button>
+          <div class="flex-1 relative">
+            <input type="text" id="message-text-input" class="w-full h-11 pr-11 pl-4 glass-input text-sm text-white placeholder-gray-500" placeholder="Escribe tu consulta o adjunta un recurso..." autocomplete="off">
+            <button type="submit" id="btn-submit-message" class="absolute right-1 top-1 w-9 h-9 rounded-lg bg-gradient-to-tr from-primary to-secondary hover:brightness-110 flex items-center justify-center text-white transition-all shadow-md">
+              <i data-lucide="send-horizontal" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </form>
+        <div id="mic-status-text" class="text-[10px] text-gray-500 mt-1.5 ml-14 hidden">
+          🎙️ Escuchando tu voz... Habla ahora.
+        </div>
+      </footer>
+
+    </main>
+  </div>
+
+  <!-- MOBILE SIDEBAR MODAL -->
+  <div id="mobile-sidebar-modal" class="fixed inset-0 z-[200] bg-black/70 backdrop-blur-sm hidden flex justify-end">
+    <div id="mobile-sidebar-content" class="w-80 h-full bg-[#0b0d14] border-l border-white/8 p-5 flex flex-col gap-5 animate__animated animate__slideInRight overflow-y-auto">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary to-secondary flex items-center justify-center shadow-md">
+            <i data-lucide="cpu" class="w-4.5 h-4.5 text-white"></i>
+          </div>
+          <h2 class="font-title font-bold text-base text-white">AaaS Engine</h2>
+        </div>
+        <button id="btn-close-mobile-sidebar" class="w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <hr class="border-gray-800/40">
+      <div class="space-y-3">
+        <div class="text-[10px] uppercase tracking-widest font-bold text-gray-500">Conexión</div>
+        <div class="glass-card p-3.5 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] text-gray-400">Estado:</span>
+            <span class="mobile-api-status-badge text-[9px] px-2 py-0.5 rounded-full font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">Handshake...</span>
+          </div>
+          <div class="mobile-endpoint-display text-[9px] text-gray-500 font-mono break-all"></div>
+        </div>
+      </div>
+      <div class="space-y-3">
+        <div class="text-[10px] uppercase tracking-widest font-bold text-gray-500">Agente</div>
+        <select id="mobile-agent-select" class="agent-select w-full text-xs p-2.5 rounded-lg glass-input text-white font-semibold"></select>
+      </div>
+      <div class="flex-1 flex flex-col overflow-hidden min-h-0">
+        <div class="text-[10px] uppercase tracking-widest font-bold text-gray-500 mb-2.5">Catálogo</div>
+        <div id="mobile-resources-catalog-list" class="flex-1 overflow-y-auto space-y-2 pr-1 text-xs"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================= -->
+  <!-- JAVASCRIPT ENGINE (VANILLA)   -->
+  <!-- ============================= -->
+  <script>
+    // ==========================================
+    // CONFIGURACIÓN GLOBAL
+    // ==========================================
+    const URL_API = "https://script.google.com/macros/s/AKfycbzNxABv8lvXmlkVOnsXMkLqnVMkolZAVv3FBh1rbU2HbZLI8tkk_kMzfg81w-FfYKhB/exec";
+    const SECURITY_KEY = "uise3t26";
+    const HUB_SHEET_ID = "1JzUG-etaANxjlYKQW6jkuRryIwSPbzztNgMMkhHTbB4";
+    const SPOKE_RESOURCE_SHEETS = ["InsumosPa_IA_UI", "Insumos", "Recursos", "Catalogo", "Catálogo"];
+
+    // Extraer ID del agente desde la URL. Si no viene, abrimos directo el agente 18.
+    const urlParams = new URLSearchParams(window.location.search);
+    let idAgente = urlParams.get('a') || urlParams.get('id') || '18';
+    let agentOptions = [
+      { id: '1', nombre: 'Asesor Patentes' },
+      { id: '2', nombre: 'NodePilot' },
+      { id: '3', nombre: 'CampusMind IA' },
+      { id: '4', nombre: 'Agente_Cocina' },
+      { id: '5', nombre: 'Agente_Panaderia' },
+      { id: '6', nombre: 'FinMentor IA' },
+      { id: '7', nombre: 'Tutor de programa' },
+      { id: '8', nombre: 'Entrenador IA de' },
+      { id: '9', nombre: 'BizNova' },
+      { id: '10', nombre: 'LaboralA' },
+      { id: '11', nombre: 'EmoCare AI' },
+      { id: '12', nombre: 'Guia gastronomico' },
+      { id: '13', nombre: 'Elite Motors AI Cor' },
+      { id: '14', nombre: 'Agente_pro' },
+      { id: '15', nombre: 'Agente_tecnologic' },
+      { id: '16', nombre: 'Agente uso correct' },
+      { id: '17', nombre: 'Agente Glucosa IA' },
+      { id: '18', nombre: 'DataLens' },
+      { id: '19', nombre: 'Tutor de matematicas' },
+      { id: '20', nombre: 'VeriFact IA - Verific' },
+      { id: String(idAgente), nombre: `Agente #${idAgente}` }
+    ];
+    agentOptions = agentOptions.filter((v,i,a) => a.findIndex(t=>(t.id === v.id)) === i);
+    let agentDirectory = {};
+
+    // Catálogo y Config en Memoria
+    let catalogoRecursos = {};
+    let activeAgentConfig = {
+      nombre: "Agente Inteligente",
+      descripcion: "",
+      system_prompt: "",
+      color_primario: "#6366f1",
+      color_secundario: "#a855f7",
+      logo_url: "",
+      border_radius: "20px"
+    };
+
+    // ==========================================
+    // MOCK DATA (Fallback Demo)
+    // ==========================================
+    const MOCK_HANDSHAKE = {
+      "nombre": "Homero Patentes Agent",
+      "config_visual": {
+        "color_primario": "#6366f1",
+        "color_secundario": "#a855f7",
+        "logo_url": "",
+        "border_radius": "20px"
+      },
+      "catalogo_recursos": {
+        "101": {
+          "titulo": "Manual de Patentes USPTO",
+          "tipo": "pdf",
+          "descripcion": "Guía completa del Manual de Examen de Patentes de EE. UU. (MPEP).",
+          "url": "https://www.uspto.gov/web/offices/pac/mpep/index.html"
+        },
+        "202": {
+          "titulo": "Plantilla Agente IA Spokes",
+          "tipo": "sheet",
+          "descripcion": "Hoja de Google Sheets estandarizada para ingesta de patentes.",
+          "url": "https://docs.google.com/spreadsheets/d/1Ws7pXgdskNyGERJivdKxO5oTgtkuup5HDqpfOSvKvb8/edit"
+        },
+        "303": {
+          "titulo": "API Endpoint Spoke-Hub",
+          "tipo": "code",
+          "descripcion": "Macro Script Apps Script para conectar e importar datos al Hub.",
+          "url": "https://script.google.com/macros/s/AKfycbyUfHpepdErV8HM2U5dMCls9aIzo3tO0Ko8LqEHYOAnaikuooYJ_cWIIf02XsiDexX7/exec?a=18"
+        }
+      }
+    };
+
+    const MOCK_IA_RESPONSES = [
+      "He recibido tu solicitud y puedo ayudarte con el perfil activo de este asistente. Dime qué necesitas resolver y revisamos los recursos disponibles.",
+      "Puedo organizar la respuesta por pasos, conceptos clave y recursos de apoyo activos para este asistente.",
+      "Estoy listo para continuar. Cuéntame el caso concreto y te responderé desde el rol configurado para este asistente."
+    ];
+
+    // ==========================================
+    // TOAST NOTIFICATION SYSTEM
+    // ==========================================
+    function showToast(message, type = 'error', duration = 5000) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast-item ${type === 'success' ? 'toast-success' : ''}`;
+
+      const iconName = type === 'success' ? 'check-circle-2' : 'alert-triangle';
+      const iconColor = type === 'success' ? 'text-emerald-400' : 'text-red-400';
+      const title = type === 'success' ? 'Operación Exitosa' : 'Error de Conexión';
+
+      toast.innerHTML = `
+        <div class="w-9 h-9 rounded-lg ${type === 'success' ? 'bg-emerald-500/10' : 'bg-red-500/10'} flex items-center justify-center flex-shrink-0">
+          <i data-lucide="${iconName}" class="w-5 h-5 ${iconColor}"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="text-xs font-bold text-white mb-0.5">${title}</div>
+          <div class="text-[11px] text-gray-400 leading-snug">${message}</div>
+        </div>
+        <button onclick="this.closest('.toast-item').classList.add('toast-exit'); setTimeout(()=>this.closest('.toast-item')?.remove(),350)" class="text-gray-500 hover:text-white transition-colors flex-shrink-0 mt-0.5">
+          <i data-lucide="x" class="w-3.5 h-3.5"></i>
+        </button>
+      `;
+
+      container.appendChild(toast);
+      lucide.createIcons({ nodes: toast.querySelectorAll('[data-lucide]') });
+
+      setTimeout(() => {
+        toast.classList.add('toast-exit');
+        setTimeout(() => toast.remove(), 400);
+      }, duration);
+    }
+
+    // ==========================================
+    // CORE APP LOGIC
+    // ==========================================
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+
+      const lockScreen = document.getElementById('lock-screen');
+      const appShell = document.getElementById('app-shell');
+
+      lockScreen.classList.add('hidden');
+      appShell.classList.remove('hidden');
+
+      // ========== UI REFERENCES ==========
+      const messagesContainer = document.getElementById('chat-messages-container');
+      const chatForm = document.getElementById('chat-message-form');
+      const messageInput = document.getElementById('message-text-input');
+      const typingIndicator = document.getElementById('ai-typing-indicator');
+      const skeletorOverlay = document.getElementById('handshake-skeletor-overlay');
+
+      const apiStatusBadge = document.getElementById('api-status-badge');
+      const endpointDisplay = document.getElementById('endpoint-display');
+      const sidebarAgentId = document.getElementById('sidebar-agent-id');
+      const tenantNameInput = document.getElementById('tenant-name-input');
+      const agentSelect = document.getElementById('agent-select');
+      const resourcesCatalogList = document.getElementById('resources-catalog-list');
+      const catalogCount = document.getElementById('catalog-count');
+
+      const agentDisplayName = document.getElementById('agent-display-name');
+      const agentAvatar = document.getElementById('agent-avatar');
+      const agentStatusText = document.getElementById('agent-status-text');
+
+      const btnCopyLatest = document.getElementById('btn-copy-latest');
+      const btnClearChat = document.getElementById('btn-clear-chat');
+      const btnVoiceInput = document.getElementById('btn-voice-input');
+      const micIcon = document.getElementById('mic-icon');
+      const micStatusText = document.getElementById('mic-status-text');
+
+      const btnToggleSidebar = document.getElementById('btn-toggle-sidebar');
+      const mobileSidebarModal = document.getElementById('mobile-sidebar-modal');
+      const btnCloseMobileSidebar = document.getElementById('btn-close-mobile-sidebar');
+      const mobileResourcesCatalogList = document.getElementById('mobile-resources-catalog-list');
+      const mobileAgentSelect = document.getElementById('mobile-agent-select');
+
+      // Show agent ID in sidebar
+      sidebarAgentId.innerText = idAgente;
+
+      // Local State
+      let chatHistory = [];
+      let latestAiResponse = "";
+
+      // ========== MARKED CONFIG ==========
+      const renderer = new marked.Renderer();
+      renderer.link = function(href, title, text) {
+        return `<a href="${href}" title="${title || ''}" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline font-semibold">${text}</a>`;
+      };
+      marked.setOptions({ renderer, breaks: true, gfm: true });
+
+      function currentAgentLabel() {
+        const agent = agentOptions.find(item => String(item.id) === String(idAgente));
+        return agent ? `${agent.id} - ${agent.nombre}` : `${idAgente} - Agente #${idAgente}`;
+      }
+
+      function renderAgentSelects() {
+        const knownIds = new Set(agentOptions.map(item => String(item.id)));
+        if (!knownIds.has(String(idAgente))) {
+          agentOptions.push({ id: String(idAgente), nombre: `Agente #${idAgente}` });
+        }
+
+        const optionsHtml = agentOptions
+          .sort((a, b) => Number(a.id) - Number(b.id))
+          .map(agent => `<option value="${escapeAttr(agent.id)}">${escapeHtml(agent.id)} - ${escapeHtml(agent.nombre || `Agente #${agent.id}`)}</option>`)
+          .join('');
+
+        [agentSelect, mobileAgentSelect].forEach(select => {
+          if (!select) return;
+          select.innerHTML = optionsHtml;
+          select.value = String(idAgente);
+        });
+
+        renderAgentGrid();
+      }
+
+      function renderAgentGrid() {
+        const agentGrid = document.getElementById('agent-grid');
+        if (!agentGrid) return;
+
+        if (!agentOptions.length) {
+          agentGrid.innerHTML = '<div class="text-center py-5 text-gray-600 italic text-[10px]">Sin agentes disponibles.</div>';
+          return;
+        }
+
+        const sorted = [...agentOptions].sort((a, b) => Number(a.id) - Number(b.id));
+        let html = '';
+        sorted.forEach((agent, idx) => {
+          const isActive = String(agent.id) === String(idAgente);
+          const colors = [
+            'from-indigo-500 to-purple-600',
+            'from-purple-500 to-pink-600',
+            'from-blue-500 to-indigo-600',
+            'from-emerald-500 to-teal-600',
+            'from-rose-500 to-red-600',
+            'from-amber-500 to-orange-600'
+          ];
+          const color = colors[idx % colors.length];
+          html += `
+            <div class="agent-card-item ${isActive ? 'active-agent' : ''}" data-agent-id="${escapeAttr(agent.id)}">
+              <div class="agent-number bg-gradient-to-tr ${color}">
+                <span class="text-white font-bold text-[10px]">${escapeHtml(agent.id)}</span>
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="text-[11px] font-semibold text-gray-200 truncate">${escapeHtml(agent.nombre || 'Agente #' + agent.id)}</div>
+                <div class="text-[9px] text-gray-500 mt-0.5 truncate">${escapeHtml(agent.descripcion || agent.comentario || 'Sin descripciÃ³n en el Hub')}</div>
+              </div>
+              ${isActive ? '<div class="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0 shadow-[0_0_6px_rgba(52,211,153,0.8)]"></div>' : ''}
+            </div>
+          `;
+        });
+        agentGrid.innerHTML = html;
+
+        // Bind click events
+        agentGrid.querySelectorAll('[data-agent-id]').forEach(card => {
+          card.addEventListener('click', () => {
+            const nextId = card.dataset.agentId;
+            if (nextId !== String(idAgente)) changeAgent(nextId);
+          });
+        });
+
+        // Bind search input
+        const searchInput = document.getElementById('agent-search-input');
+        if (searchInput && !searchInput._bound) {
+          searchInput._bound = true;
+          searchInput.addEventListener('input', () => {
+            const query = searchInput.value.toLowerCase();
+            agentGrid.querySelectorAll('[data-agent-id]').forEach(card => {
+              const txt = card.textContent.toLowerCase();
+              card.style.display = txt.includes(query) ? '' : 'none';
+            });
+          });
+        }
+      }
+
+      function syncUrlAgent() {
+        const nextUrl = new URL(window.location.href);
+        nextUrl.searchParams.delete('id');
+        nextUrl.searchParams.set('a', idAgente);
+        window.history.replaceState({}, '', nextUrl);
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      function escapeAttr(value) {
+        return escapeHtml(value).replace(/`/g, '&#096;');
+      }
+
+      async function changeAgent(nextId) {
+        if (!nextId || String(nextId) === String(idAgente)) return;
+        idAgente = String(nextId);
+        syncUrlAgent();
+        sidebarAgentId.innerText = idAgente;
+        catalogoRecursos = {};
+        chatHistory = [];
+        latestAiResponse = "";
+        messagesContainer.innerHTML = "";
+        resourcesCatalogList.innerHTML = '<div class="text-center py-5 text-gray-600 italic text-[11px]">Cargando recursos...</div>';
+        mobileResourcesCatalogList.innerHTML = resourcesCatalogList.innerHTML;
+        catalogCount.innerText = '0';
+        skeletorOverlay.classList.remove('hidden');
+        skeletorOverlay.style.animation = "none";
+        renderAgentSelects();
+        await executeHandshake();
+      }
+
+      agentSelect?.addEventListener('change', (event) => changeAgent(event.target.value));
+      mobileAgentSelect?.addEventListener('change', (event) => {
+        mobileSidebarModal.classList.add('hidden');
+        changeAgent(event.target.value);
+      });
+      renderAgentSelects();
+
+      // ========== DYNAMIC VISUAL CONFIG ==========
+      function applyVisualConfig(config) {
+        if (!config) return;
+        const root = document.documentElement;
+        const primary = config.color_primario || '#6366f1';
+        const secondary = config.color_secundario || '#a855f7';
+        const borderRadius = config.border_radius || '20px';
+
+        root.style.setProperty('--color-primary', primary);
+        root.style.setProperty('--color-secondary', secondary);
+        root.style.setProperty('--panel-radius', borderRadius);
+
+        tenantNameInput.innerText = `${idAgente} - ${config.nombre || 'Agente Inteligente'}`;
+        agentDisplayName.innerText = config.nombre || 'Agente Inteligente';
+
+        if (config.logo_url) {
+          agentAvatar.innerHTML = `<img src="${config.logo_url}" alt="logo" class="w-full h-full object-cover">`;
+          document.getElementById('brand-logo').innerHTML = `<img src="${config.logo_url}" alt="logo" class="w-full h-full object-cover">`;
+        } else {
+          agentAvatar.innerHTML = `<i data-lucide="bot" class="w-5.5 h-5.5 text-white"></i>`;
+          document.getElementById('brand-logo').innerHTML = `<i data-lucide="cpu" class="w-5 h-5 text-white"></i>`;
+          lucide.createIcons();
+        }
+      }
+
+      // ========== CATALOG POPULATION ==========
+      function populateCatalog(rawCatalog) {
+        catalogoRecursos = normalizeCatalog(rawCatalog);
+        const keys = Object.keys(catalogoRecursos);
+        catalogCount.innerText = keys.length;
+        if (!keys.length) {
+          resourcesCatalogList.innerHTML = '<div class="text-center py-5 text-gray-600 italic text-[11px]">No llegaron recursos para este agente.</div>';
+          mobileResourcesCatalogList.innerHTML = resourcesCatalogList.innerHTML;
+          return;
+        }
+
+        let html = "";
+        keys.forEach(id => {
+          const res = catalogoRecursos[id];
+          const tc = getResourceTypeConfig(res.tipo);
+          html += `
+            <div class="resource-card-interactive p-2.5 glass-card flex items-start gap-2 cursor-pointer" data-resource-id="${escapeAttr(id)}">
+              <div class="w-7 h-7 rounded-md bg-white/5 border border-white/8 flex items-center justify-center text-gray-300 flex-shrink-0">
+                <i data-lucide="${tc.icon}" class="w-3.5 h-3.5"></i>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="font-semibold text-gray-200 truncate text-[11px]">${escapeHtml(res.titulo)}</div>
+                <div class="flex items-center gap-1.5 mt-0.5">
+                  <span class="text-[8px] px-1 py-px rounded font-bold uppercase tracking-wider border ${tc.badge}">${escapeHtml(tc.label)}</span>
+                  <span class="text-[8px] text-gray-600 font-mono truncate">[[${escapeHtml(id)}]]</span>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+
+        resourcesCatalogList.innerHTML = html;
+        mobileResourcesCatalogList.innerHTML = html;
+        document.querySelectorAll('[data-resource-id]').forEach(card => {
+          card.addEventListener('click', () => insertResourceToken(card.dataset.resourceId));
+        });
+        lucide.createIcons();
+      }
+
+      window.insertResourceToken = function(id) {
+        messageInput.value += ` [[${id}]]`;
+        messageInput.focus();
+      };
+
+      // ========== MULTIMEDIA TRANSLATOR ==========
+      function translateMultimediaTags(text) {
+        return text.replace(/\[\[(.*?)\]\]/g, (match, id) => {
+          const res = catalogoRecursos[id];
+          if (!res) {
+            return `
+              <div class="my-3 p-3.5 rounded-xl border border-dashed border-gray-700/60 bg-black/20 flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg bg-gray-900/60 flex items-center justify-center text-gray-600 flex-shrink-0">
+                  <i data-lucide="alert-circle" class="w-4.5 h-4.5"></i>
+                </div>
+                <div>
+                  <div class="text-[11px] font-bold text-gray-400">Recurso no encontrado</div>
+                  <div class="text-[10px] text-gray-600">ID [[${id}]] no existe en este Tenant</div>
+                </div>
+              </div>
+            `;
+          }
+
+          const typeMap = {
+            pdf:   { icon: "file-text",  label: "PDF Manual",     btn: "Descargar PDF",          cls: "bg-red-500/10 text-red-400 border-red-500/20" },
+            sheet: { icon: "table",      label: "Google Sheet",   btn: "Abrir Plantilla",        cls: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
+            code:  { icon: "terminal",   label: "Script Macro",   btn: "Inspeccionar Código",    cls: "bg-purple-500/10 text-purple-400 border-purple-500/20" }
+          };
+          const tm = typeMap[res.tipo] || { icon: "file", label: "Recurso", btn: "Abrir", cls: "bg-blue-500/10 text-blue-400 border-blue-500/20" };
+
+          return `
+            <div class="resource-card-interactive my-4 rounded-xl border border-white/5 bg-black/35 overflow-hidden flex flex-col sm:flex-row shadow-lg max-w-md">
+              <div class="p-3.5 flex items-start gap-3 flex-1">
+                <div class="w-11 h-11 rounded-xl bg-white/5 border border-white/8 flex items-center justify-center text-primary flex-shrink-0">
+                  <i data-lucide="${tm.icon}" class="w-5 h-5"></i>
+                </div>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-1.5 mb-1">
+                    <span class="text-[8px] px-1.5 py-0.5 rounded font-extrabold uppercase border ${tm.cls}">${tm.label}</span>
+                    <span class="text-[8px] font-mono text-gray-600">[[${id}]]</span>
+                  </div>
+                  <h4 class="font-semibold text-gray-200 text-[13px] leading-snug truncate">${res.titulo}</h4>
+                  <p class="text-[11px] text-gray-400 mt-1 leading-relaxed line-clamp-2">${res.descripcion || 'Sin descripción.'}</p>
+                </div>
+              </div>
+              <div class="p-3 bg-black/15 border-t sm:border-t-0 sm:border-l border-white/5 flex items-center justify-center flex-shrink-0">
+                <a href="${res.url}" target="_blank" class="w-full sm:w-auto px-3.5 py-2 rounded-lg bg-primary hover:brightness-110 text-[11px] font-bold text-white flex items-center justify-center gap-1.5 shadow-md transition-all">
+                  <i data-lucide="external-link" class="w-3 h-3"></i>
+                  ${tm.btn}
+                </a>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      // ========== MESSAGE RENDERER ==========
+      function appendMessage(sender, text, tokens = null) {
+        const isAi = sender === 'ai';
+        const bubble = document.createElement('div');
+        bubble.className = `flex gap-3 max-w-[88%] msg-enter ${isAi ? '' : 'ml-auto flex-row-reverse'}`;
+
+        const avatarHtml = isAi
+          ? `<div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-primary to-secondary flex items-center justify-center shadow-md border border-white/5 flex-shrink-0">
+               <i data-lucide="bot" class="w-4 h-4 text-white"></i>
+             </div>`
+          : `<div class="w-8 h-8 rounded-lg bg-white/5 border border-white/8 flex items-center justify-center text-gray-300 flex-shrink-0">
+               <i data-lucide="user" class="w-4 h-4"></i>
+             </div>`;
+
+        let processedContent = isAi ? marked.parse(text) : text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        if (isAi) processedContent = translateMultimediaTags(processedContent);
+
+        const bubbleClass = isAi
+          ? 'bg-white/[0.04] border border-white/5 text-gray-200 rounded-tr-2xl rounded-br-2xl rounded-bl-2xl'
+          : 'bg-gradient-to-tr from-primary to-secondary text-white rounded-tl-2xl rounded-bl-2xl rounded-br-2xl';
+
+        bubble.innerHTML = `
+          ${avatarHtml}
+          <div class="flex flex-col gap-1 min-w-0">
+            <div class="px-4 py-3 ${bubbleClass} text-sm shadow-md prose prose-invert max-w-none">
+              ${processedContent}
+            </div>
+            ${isAi && tokens ? `<span class="text-[9px] text-gray-600 font-mono mt-0.5 ml-1">Consumo: ${tokens} tokens</span>` : ''}
+          </div>
+        `;
+
+        messagesContainer.appendChild(bubble);
+        messagesContainer.scrollTo({ top: messagesContainer.scrollHeight, behavior: 'smooth' });
+        lucide.createIcons();
+        Prism.highlightAllUnder(messagesContainer);
+      }
+
+      // ========== PERSISTENCE & HISTORY ==========
+      function getSessionsKey() {
+        return `AaaS_sessions_list_v4_${idAgente}`;
+      }
+      
+      let allSessions = [];
+      let currentSessionId = null;
+
+      function saveSession() {
+        if (!currentSessionId) {
+          currentSessionId = Date.now().toString();
+          allSessions.unshift({ id: currentSessionId, date: new Date().toLocaleString(), messages: [] });
+        }
+        const session = allSessions.find(s => s.id === currentSessionId);
+        if (session) session.messages = [...chatHistory];
+        localStorage.setItem(getSessionsKey(), JSON.stringify(allSessions));
+        renderSessionsList();
+      }
+
+      function loadSession(sessionId = null) {
+        messagesContainer.innerHTML = "";
+        chatHistory = [];
+        latestAiResponse = "";
+        
+        try {
+          const stored = localStorage.getItem(getSessionsKey());
+          allSessions = stored ? JSON.parse(stored) : [];
+        } catch (e) { allSessions = []; }
+
+        if (sessionId) {
+          const session = allSessions.find(s => s.id === sessionId);
+          if (session) {
+            currentSessionId = session.id;
+            chatHistory = [...session.messages];
+            chatHistory.forEach(msg => {
+              appendMessage(msg.sender, msg.text, msg.tokens);
+              if (msg.sender === 'ai') latestAiResponse = msg.text;
+            });
+            renderSessionsList();
+            return;
+          }
+        }
+
+        // New Session
+        currentSessionId = null;
+        const welcome = buildWelcomeMessage();
+        appendMessage('ai', welcome);
+        chatHistory.push({ sender: 'ai', text: welcome });
+        latestAiResponse = welcome;
+        saveSession();
+      }
+
+      function renderSessionsList() {
+        const listContainer = document.getElementById('session-history-list');
+        if (!listContainer) return;
+        if (!allSessions.length) {
+          listContainer.innerHTML = '<div class="text-center py-2 text-gray-600 italic text-[10px]">Sin sesiones previas.</div>';
+          return;
+        }
+        let html = '';
+        allSessions.forEach(s => {
+          const isActive = s.id === currentSessionId;
+          let title = 'Nueva Conversación';
+          if (s.messages && s.messages.length > 1 && s.messages[1].text) {
+             title = s.messages[1].text.substring(0, 25) + '...';
+          }
+          html += `
+            <div class="p-2 rounded-lg flex items-center gap-2 border transition-all ${isActive ? 'bg-primary/20 border-primary/40' : 'bg-black/20 border-white/5 hover:border-white/20'}">
+              <button type="button" onclick="window.loadSessionFromHistory('${s.id}')" class="min-w-0 flex-1 flex items-center gap-2 text-left">
+              <i data-lucide="message-square" class="w-3.5 h-3.5 ${isActive ? 'text-primary' : 'text-gray-500'}"></i>
+              <div class="min-w-0 flex-1">
+                <div class="text-[10px] font-semibold text-gray-200 truncate">${escapeHtml(title)}</div>
+                <div class="text-[8px] text-gray-500">${s.date}</div>
+              </div>
+              </button>
+              <button type="button" onclick="window.deleteSessionFromHistory('${s.id}')" title="Eliminar chat" class="w-6 h-6 rounded-md flex items-center justify-center text-gray-600 hover:text-red-300 hover:bg-red-500/10 transition-all">
+                <i data-lucide="trash-2" class="w-3 h-3"></i>
+              </button>
+            </div>
+          `;
+        });
+        listContainer.innerHTML = html;
+        lucide.createIcons();
+      }
+
+      window.loadSessionFromHistory = function(id) {
+        if (id === currentSessionId) return;
+        loadSession(id);
+      };
+
+      window.deleteSessionFromHistory = function(id) {
+        const session = allSessions.find(s => s.id === id);
+        const title = session?.messages?.[1]?.text?.substring(0, 35) || 'este chat';
+        if (!confirm(`¿Eliminar "${title}"?`)) return;
+        allSessions = allSessions.filter(s => s.id !== id);
+        localStorage.setItem(getSessionsKey(), JSON.stringify(allSessions));
+        if (id === currentSessionId) {
+          currentSessionId = null;
+          messagesContainer.innerHTML = "";
+          chatHistory = [];
+          latestAiResponse = "";
+          loadSession();
+        } else {
+          renderSessionsList();
+        }
+      };
+
+      const btnNewSession = document.getElementById('btn-new-session');
+      if (btnNewSession) btnNewSession.addEventListener('click', () => loadSession());
+
+      const btnClearAllSessions = document.getElementById('btn-clear-all-sessions');
+      if (btnClearAllSessions) {
+        btnClearAllSessions.addEventListener('click', () => {
+          if (!allSessions.length) return;
+          if (!confirm("¿Eliminar todos los chats guardados de este agente?")) return;
+          allSessions = [];
+          currentSessionId = null;
+          localStorage.removeItem(getSessionsKey());
+          messagesContainer.innerHTML = "";
+          chatHistory = [];
+          latestAiResponse = "";
+          loadSession();
+        });
+      }
+
+
+      // Copy latest
+      btnCopyLatest.addEventListener('click', () => {
+        if (!latestAiResponse) return;
+        const clean = latestAiResponse.replace(/\[\[(.*?)\]\]/g, '').replace(/\*\*|__/g, '');
+        navigator.clipboard.writeText(clean).then(() => {
+          agentStatusText.innerText = "¡Copiado al portapapeles!";
+          showToast("Respuesta copiada al portapapeles correctamente.", "success", 2500);
+          setTimeout(() => { agentStatusText.innerText = "Listo para recibir instrucciones"; }, 3000);
+        });
+      });
+
+      // Clear Chat
+      btnClearChat.addEventListener('click', () => {
+        if (confirm("¿Vaciar historial de esta conversación?")) {
+          if (currentSessionId) {
+            allSessions = allSessions.filter(s => s.id !== currentSessionId);
+            localStorage.setItem(getSessionsKey(), JSON.stringify(allSessions));
+          }
+          currentSessionId = null;
+          messagesContainer.innerHTML = "";
+          chatHistory = [];
+          latestAiResponse = "";
+          loadSession();
+        }
+      });
+
+      // ========== VOICE INPUT ==========
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.lang = 'es-ES';
+        recognition.interimResults = false;
+        let isListening = false;
+
+        btnVoiceInput.addEventListener('click', () => {
+          if (!isListening) recognition.start(); else recognition.stop();
+        });
+
+        recognition.onstart = () => {
+          isListening = true;
+          btnVoiceInput.classList.add('mic-active');
+          micIcon.setAttribute('data-lucide', 'mic-off');
+          micStatusText.classList.remove('hidden');
+          messageInput.placeholder = "Escuchando voz...";
+          lucide.createIcons();
+        };
+        recognition.onend = () => {
+          isListening = false;
+          btnVoiceInput.classList.remove('mic-active');
+          micIcon.setAttribute('data-lucide', 'mic');
+          micStatusText.classList.add('hidden');
+          messageInput.placeholder = "Escribe tu consulta o adjunta un recurso...";
+          lucide.createIcons();
+        };
+        recognition.onresult = (e) => {
+          messageInput.value = (messageInput.value + " " + e.results[0][0].transcript).trim();
+          messageInput.focus();
+        };
+        recognition.onerror = () => {
+          isListening = false;
+          btnVoiceInput.classList.remove('mic-active');
+          showToast("No se pudo capturar la voz. Verifica los permisos del micrófono.", "error", 4000);
+        };
+      } else {
+        btnVoiceInput.style.display = 'none';
+      }
+
+      // ==========================================
+      // API COMMUNICATION (SECURITY CONTRACT)
+      // ==========================================
+      async function callAaaS_API(action, payload = {}) {
+        if (!URL_API) return simulateApiResponse(action, payload);
+
+        try {
+          const endpoint = new URL(URL_API);
+          endpoint.searchParams.set('a', idAgente);
+
+          const bodyData = {
+            action: action,
+            apiKey: SECURITY_KEY,
+            idAgente: idAgente,
+            correoId: "estudiante@uis.edu.co",
+            ...payload
+          };
+
+          console.log("[AaaS] ➜ Sending:", bodyData);
+
+          const response = await fetch(endpoint.toString(), {
+            method: 'POST',
+            mode: 'cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(bodyData)
+          });
+
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const data = await parseApiResponse(response);
+          console.log("[AaaS] ✓ Response:", data);
+
+          // Check for error status from server
+          if (data.status === 'error') throw new Error(data.message || "El servidor reportó un error en la operación.");
+
+          return data;
+
+        } catch (error) {
+          console.error("[AaaS] ✗ Connection failed:", error);
+
+          if (action === 'sendMessage' && payload.tieneArchivo) {
+            setApiStatus("POST REQUERIDO", "error");
+            agentStatusText.innerText = "El adjunto no pudo llegar al servidor";
+            return {
+              respuesta: `No pude enviar el archivo adjunto al backend.\n\nEl PDF **${payload.archivoNombre || 'adjunto'}** estÃ¡ cargado en la interfaz, pero el navegador bloqueÃ³ el envÃ­o por POST o el Apps Script rechazÃ³ la conexiÃ³n. Para leer PDFs necesito que el endpoint acepte la peticiÃ³n POST con el archivo; no puedo reenviarlo por GET porque se pierde el contenido del documento.\n\nRevisa permisos/CORS del Apps Script y vuelve a intentar adjuntando el PDF.`,
+              tokens: null
+            };
+          }
+
+          const fallback = await callAaaS_API_GET(action, payload);
+          if (fallback) return fallback;
+
+          if (action === 'getAppData') {
+            try {
+              const sheetData = await loadAppDataFromSheets();
+              setApiStatus("HUB OK", "warning");
+              return sheetData;
+            } catch (sheetError) {
+              console.error("[AaaS] Hub/Spoke load failed:", sheetError);
+            }
+          }
+
+          if (action === 'sendMessage') {
+            setApiStatus("AUTH REQUERIDA", "error");
+            agentStatusText.innerText = "Bloqueado por seguridad del navegador";
+            return {
+              respuesta: `⚠️ **Acceso Denegado por el Servidor**\n\nEl backend de Apps Script ha rechazado la conexión. Al no poder cambiar los permisos, tu navegador bloquea la consulta por políticas de seguridad (CORS).\n\n### Cómo solucionarlo en tu entorno local:\n\n1. **Inicia Sesión:** Abre <a href="${URL_API}?a=${idAgente}" target="_blank" class="text-indigo-400 font-bold underline bg-indigo-500/10 px-2 py-1 rounded">este enlace seguro</a> en una nueva pestaña, inicia sesión con Google y cierra la pestaña.\n2. **Evita el bloqueo CORS:** Al estar programando desde tu PC (\`localhost\`), el navegador seguirá bloqueando el tráfico hacia Google. Debes instalar una extensión como **Allow CORS: Access-Control-Allow-Origin** en tu navegador y activarla, o iniciar Chrome en modo desarrollador (\`--disable-web-security\`).\n\nIntenta escribir de nuevo cuando hayas completado los pasos.`,
+              tokens: null
+            };
+          }
+
+          showToast(`No hubo comunicación con la API real. Revisa permisos del Apps Script o CORS. (${error.message})`, "error", 7000);
+          setApiStatus("SIN CONEXIÓN", "error");
+          return action === 'getAppData' ? getLocalFallbackData() : null;
+        }
+      }
+
+      async function callAaaS_API_GET(action, payload = {}) {
+        try {
+          const endpoint = new URL(URL_API);
+          endpoint.searchParams.set('a', idAgente);
+          endpoint.searchParams.set('idAgente', idAgente);
+          endpoint.searchParams.set('action', action);
+          endpoint.searchParams.set('apiKey', SECURITY_KEY);
+          endpoint.searchParams.set('correoId', 'estudiante@uis.edu.co');
+          if (payload.mensaje) endpoint.searchParams.set('mensaje', payload.mensaje);
+
+          const response = await fetch(endpoint.toString(), { method: 'GET', mode: 'cors' });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const data = await parseApiResponse(response);
+          if (data.status === 'error') throw new Error(data.message || "El servidor reportó un error en la operación.");
+          return data;
+        } catch (error) {
+          console.error("[AaaS] GET fallback failed:", error);
+          return null;
+        }
+      }
+
+      async function parseApiResponse(response) {
+        const text = await response.text();
+        if (text.includes('accounts.google.com') || text.includes('ServiceLogin') || text.includes('identifierId')) {
+          return {
+            status: 'error',
+            message: 'El Apps Script está pidiendo inicio de sesión de Google. Publica la Web App para acceso externo o comparte el despliegue con este usuario.'
+          };
+        }
+        try {
+          return JSON.parse(text);
+        } catch {
+          return { respuesta: text };
+        }
+      }
+
+      function setApiStatus(label, type = "online") {
+        const classes = {
+          online: "text-[9px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+          loading: "text-[9px] px-2 py-0.5 rounded-full font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20",
+          warning: "text-[9px] px-2 py-0.5 rounded-full font-bold bg-sky-500/10 text-sky-300 border border-sky-500/20",
+          error: "text-[9px] px-2 py-0.5 rounded-full font-bold bg-red-500/10 text-red-400 border border-red-500/20"
+        };
+        apiStatusBadge.className = classes[type] || classes.online;
+        apiStatusBadge.innerText = label;
+        document.querySelectorAll('.mobile-api-status-badge').forEach(el => {
+          el.className = apiStatusBadge.className;
+          el.innerText = label;
+        });
+      }
+
+      function normalizeKey(value) {
+        return String(value ?? '')
+          .trim()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '_')
+          .replace(/^_+|_+$/g, '');
+      }
+
+      function pick(row, keys) {
+        for (const key of keys) {
+          const value = row[normalizeKey(key)];
+          if (value !== undefined && value !== null && String(value).trim() !== '') return value;
+        }
+        return '';
+      }
+
+      function resourceTypeKey(tipo) {
+        const key = normalizeKey(tipo);
+        if (key.includes('pdf')) return 'pdf';
+        if (key.includes('video') || key.includes('youtube')) return 'video';
+        if (key.includes('imagen') || key.includes('image') || key.includes('png') || key.includes('jpg')) return 'image';
+        if (key.includes('sheet') || key.includes('hoja') || key.includes('spreadsheet')) return 'sheet';
+        if (key.includes('code') || key.includes('script') || key.includes('macro')) return 'code';
+        if (key.includes('enlace') || key.includes('link') || key.includes('url') || key.includes('web')) return 'link';
+        return key || 'default';
+      }
+
+      function getResourceTypeConfig(tipo) {
+        const configs = {
+          pdf:   { icon: "file-text", label: "PDF",   btn: "Abrir PDF",      badge: "bg-red-500/10 text-red-400 border-red-500/20" },
+          video: { icon: "play-square", label: "Video", btn: "Ver video",     badge: "bg-rose-500/10 text-rose-300 border-rose-500/20" },
+          image: { icon: "image", label: "Imagen", btn: "Abrir imagen",       badge: "bg-cyan-500/10 text-cyan-300 border-cyan-500/20" },
+          link:  { icon: "link", label: "Enlace", btn: "Abrir enlace",        badge: "bg-blue-500/10 text-blue-300 border-blue-500/20" },
+          sheet: { icon: "table", label: "Google Sheet", btn: "Abrir hoja",   badge: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
+          code:  { icon: "terminal", label: "Code", btn: "Abrir recurso",     badge: "bg-purple-500/10 text-purple-400 border-purple-500/20" },
+          default: { icon: "file", label: "Recurso", btn: "Abrir",            badge: "bg-slate-500/10 text-slate-300 border-slate-500/20" }
+        };
+        return configs[resourceTypeKey(tipo)] || configs.default;
+      }
+
+      function loadGvizTable(spreadsheetId, { gid = null, sheet = null, headers = 1 } = {}) {
+        return new Promise((resolve, reject) => {
+          const callbackName = `__gviz_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+          const script = document.createElement('script');
+          const url = new URL(`https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq`);
+          url.searchParams.set('tqx', `out:json;responseHandler:${callbackName}`);
+          url.searchParams.set('headers', String(headers));
+          if (gid !== null) url.searchParams.set('gid', gid);
+          if (sheet) url.searchParams.set('sheet', sheet);
+
+          const cleanup = () => {
+            delete window[callbackName];
+            script.remove();
+          };
+
+          const timer = setTimeout(() => {
+            cleanup();
+            reject(new Error(`No respondió Google Sheets: ${sheet || gid || spreadsheetId}`));
+          }, 12000);
+
+          window[callbackName] = (payload) => {
+            clearTimeout(timer);
+            cleanup();
+            if (!payload || payload.status === 'error') {
+              reject(new Error(payload?.errors?.[0]?.detailed_message || `No se pudo leer ${sheet || gid || spreadsheetId}`));
+              return;
+            }
+            resolve(payload.table);
+          };
+
+          script.onerror = () => {
+            clearTimeout(timer);
+            cleanup();
+            reject(new Error(`Error cargando ${sheet || gid || spreadsheetId}`));
+          };
+
+          script.src = url.toString();
+          document.head.appendChild(script);
+        });
+      }
+
+      function tableToObjects(table) {
+        const headers = table.cols.map((col, index) => normalizeKey(col.label || col.id || `col_${index}`));
+        return (table.rows || []).map(row => {
+          const obj = {};
+          headers.forEach((header, index) => {
+            const cell = row.c?.[index];
+            obj[header] = cell ? (cell.f ?? cell.v ?? '') : '';
+          });
+          return obj;
+        });
+      }
+
+      async function loadHubAgents() {
+        const table = await loadGvizTable(HUB_SHEET_ID, { gid: 0, headers: 1 });
+        const rows = tableToObjects(table);
+        const agents = rows.map(row => ({
+          id: String(pick(row, ['Id_Agente', 'id_agente', 'id', 'numero'])).replace(/\.0$/, '').trim(),
+          nombre: String(pick(row, ['Nombre', 'name']) || '').trim(),
+          urlPlantilla: String(pick(row, ['UrlPlantilla', 'url_plantilla', 'url']) || '').trim(),
+          idPlantilla: String(pick(row, ['IdPlantilla', 'id_plantilla', 'spreadsheet_id']) || '').trim(),
+          estado: String(pick(row, ['Estado', 'status']) || '').trim(),
+          comentario: String(pick(row, ['Descripcion', 'DescripciÃ³n', 'Comentario', 'descripcion', 'description']) || '').trim()
+        })).filter(agent => agent.id && normalizeKey(agent.estado || 'Activo') === 'activo');
+
+        agentDirectory = agents.reduce((acc, agent) => {
+          acc[agent.id] = agent;
+          return acc;
+        }, {});
+        agentOptions = agents.map(agent => ({
+          id: agent.id,
+          nombre: agent.nombre || `Agente #${agent.id}`,
+          descripcion: agent.comentario
+        }));
+        if (!agentDirectory[String(idAgente)] && agentOptions.length) {
+          idAgente = agentOptions[0].id;
+          syncUrlAgent();
+          sidebarAgentId.innerText = idAgente;
+        }
+        renderAgentSelects();
+        return agents;
+      }
+
+      async function loadFirstAvailableSheet(spreadsheetId, sheetNames) {
+        let lastError = null;
+        for (const sheet of sheetNames) {
+          try {
+            const table = await loadGvizTable(spreadsheetId, { sheet, headers: 1 });
+            return { sheet, rows: tableToObjects(table) };
+          } catch (error) {
+            lastError = error;
+          }
+        }
+        throw lastError || new Error('No se encontró la pestaña de insumos.');
+      }
+
+      async function loadAgentConfig(spreadsheetId) {
+        try {
+          const table = await loadGvizTable(spreadsheetId, { sheet: 'Config', headers: 1 });
+          const rows = tableToObjects(table);
+          return rows.reduce((acc, row) => {
+            const key = String(pick(row, ['Clave', 'key']) || '').trim();
+            if (key) acc[normalizeKey(key)] = pick(row, ['Valor', 'value']);
+            return acc;
+          }, {});
+        } catch {
+          return {};
+        }
+      }
+
+      function parseVisualConfig(configRows, fallbackName) {
+        let interfaz = {};
+        try {
+          interfaz = JSON.parse(configRows.interfaz || '{}');
+        } catch {
+          interfaz = {};
+        }
+
+        const colores = interfaz.estetica?.colores || {};
+        const logo = interfaz.disposicion?.cabecera?.urlLogo || '';
+        return {
+          nombre: configRows.nombre_agente || fallbackName || `Agente #${idAgente}`,
+          color_primario: colores.primario || colores.burbujaUsuario || '#6366f1',
+          color_secundario: colores.secundario || '#a855f7',
+          logo_url: logo.includes('PONER_URL') ? '' : logo,
+          border_radius: interfaz.estetica?.bordesRedondeados || '20px'
+        };
+      }
+
+      async function loadAppDataFromSheets() {
+        await loadHubAgents();
+        const activeAgent = agentDirectory[String(idAgente)];
+        if (!activeAgent?.idPlantilla) throw new Error('El Hub no tiene IdPlantilla para este agente.');
+
+        const [configRows, resourcesData] = await Promise.all([
+          loadAgentConfig(activeAgent.idPlantilla),
+          loadFirstAvailableSheet(activeAgent.idPlantilla, SPOKE_RESOURCE_SHEETS)
+        ]);
+
+        const resources = resourcesData.rows.map(row => ({
+          id_recurso: pick(row, ['Id_Recurso', 'id_recurso', 'id']),
+          tipo: pick(row, ['Tipo', 'type']),
+          url: pick(row, ['Url', 'url', 'link']),
+          categoria: pick(row, ['Categoria', 'category']),
+          estado: pick(row, ['Estado', 'status']) || 'Activo',
+          descripcion: pick(row, ['Descripcion', 'description'])
+        }));
+
+        const agentDescription = isUsefulDescription(activeAgent.comentario)
+          ? activeAgent.comentario
+          : (configRows.system_prompt || activeAgent.comentario || '');
+
+        return {
+          source: 'sheets',
+          nombre: configRows.nombre_agente || activeAgent.nombre || `Agente #${idAgente}`,
+          descripcion: agentDescription,
+          system_prompt: configRows.system_prompt || '',
+          config_visual: {
+            ...parseVisualConfig(configRows, activeAgent.nombre),
+            descripcion: agentDescription,
+            system_prompt: configRows.system_prompt || ''
+          },
+          catalogo_recursos: resources,
+          agentes: agentOptions,
+          spoke: {
+            sheet: resourcesData.sheet,
+            spreadsheetId: activeAgent.idPlantilla,
+            url: activeAgent.urlPlantilla
+          }
+        };
+      }
+
+      function normalizeCatalog(catalog) {
+        if (!catalog) return {};
+        if (Array.isArray(catalog)) {
+          return catalog.reduce((acc, item, index) => {
+            const id = item.id || item.codigo || item.recurso_id || item.id_recurso || item.titulo || item.nombre || String(index + 1);
+            const estado = item.estado || item.status || 'Activo';
+            if (normalizeKey(estado) && normalizeKey(estado) !== 'activo') return acc;
+            acc[id] = {
+              titulo: item.titulo || item.nombre || item.name || item.id_recurso || `Recurso ${id}`,
+              tipo: resourceTypeKey(item.tipo || item.type || 'default'),
+              descripcion: item.descripcion || item.description || '',
+              url: item.url || item.link || item.href || '#'
+            };
+            return acc;
+          }, {});
+        }
+        return Object.entries(catalog).reduce((acc, [id, item]) => {
+          const estado = item.estado || item.status || 'Activo';
+          if (normalizeKey(estado) && normalizeKey(estado) !== 'activo') return acc;
+          acc[id] = {
+            titulo: item.titulo || item.nombre || item.name || `Recurso ${id}`,
+            tipo: resourceTypeKey(item.tipo || item.type || 'default'),
+            descripcion: item.descripcion || item.description || '',
+            url: item.url || item.link || item.href || '#'
+          };
+          return acc;
+        }, {});
+      }
+
+      function normalizeAppData(data) {
+        const root = data?.data || data?.payload || data || {};
+        const agentes = root.agentes || root.agents || root.lista_agentes || [];
+        if (Array.isArray(agentes) && agentes.length) {
+          agentOptions = agentes.map(agent => ({
+            id: String(agent.id || agent.a || agent.numero || agent.agent_id),
+            nombre: agent.nombre || agent.name || agent.titulo || `Agente #${agent.id || agent.a || agent.numero}`,
+            descripcion: agent.descripcion || agent.description || agent.comentario || agentDirectory[String(agent.id || agent.a || agent.numero || agent.agent_id)]?.comentario || ''
+          })).filter(agent => agent.id && agent.id !== 'undefined');
+          renderAgentSelects();
+        }
+
+        return {
+          source: root.source || data?.source || 'api',
+          nombre: root.nombre || root.name || root.agente?.nombre || root.agent?.name || `Agente #${idAgente}`,
+          descripcion: root.descripcion || root.description || root.comentario || root.agent?.description || '',
+          system_prompt: root.system_prompt || root.systemPrompt || root.prompt || '',
+          config_visual: root.config_visual || root.visual || {},
+          catalogo_recursos: root.catalogo_recursos || root.recursos || root.resources || root.catalogo || {}
+        };
+      }
+
+      function normalizeMessageResponse(resp) {
+        if (!resp) return null;
+        const root = resp.data || resp.payload || resp;
+        return {
+          respuesta: root.respuesta || root.response || root.message || root.mensaje || root.text || root.output,
+          tokens: root.tokens || root.usage?.total_tokens || null
+        };
+      }
+
+      function cleanRoleDescription(text, fallbackName = activeAgentConfig.nombre) {
+        const raw = String(text || '').replace(/\s+/g, ' ').trim();
+        if (!raw) return `Estoy listo para ayudarte con consultas relacionadas con ${fallbackName}.`;
+        if (raw.length < 24 || /^(ok|test|prueba|comentando|estoy aqui)/i.test(raw)) {
+          return `Estoy listo para ayudarte con consultas relacionadas con ${fallbackName}.`;
+        }
+
+        const withoutPrefix = raw
+          .replace(/^eres\s+(el|la|un|una)?\s*/i, '')
+          .replace(/^soy\s+(el|la|un|una)?\s*/i, '');
+
+        const firstSentence = withoutPrefix
+          .split(/(?<=[.!?])\s+/)
+          .find(sentence => sentence.length > 28) || withoutPrefix;
+
+        return firstSentence
+          .replace(/\bAgente\s+#?\d+\b/gi, fallbackName)
+          .replace(/\s+\{\s*"?disposicion"?.*$/i, '')
+          .trim();
+      }
+
+      function isUsefulDescription(text) {
+        const value = String(text || '').trim();
+        return value.length >= 24 && !/^(ok|test|prueba|comentando|estoy aqui)/i.test(value);
+      }
+
+      function buildWelcomeMessage() {
+        const name = activeAgentConfig.nombre || 'tu asistente';
+        const role = cleanRoleDescription(
+          activeAgentConfig.descripcion || activeAgentConfig.system_prompt,
+          name
+        );
+
+        return `Hola, soy **${name}**.\n\n${role}\n\nCuéntame qué necesitas resolver y trabajaré desde ese enfoque.`;
+      }
+
+      function buildLocalAgentResponse(userText) {
+        const name = activeAgentConfig.nombre || 'tu asistente';
+        const role = cleanRoleDescription(activeAgentConfig.descripcion || activeAgentConfig.system_prompt, name);
+        const resources = Object.values(catalogoRecursos).slice(0, 3);
+        const resourceLine = resources.length
+          ? `Tengo ${Object.keys(catalogoRecursos).length} recursos de apoyo cargados para este rol, incluyendo ${resources.map(res => `**${res.titulo}**`).join(', ')}.`
+          : 'Tengo el perfil del agente cargado, pero no encontré recursos activos para este rol.';
+
+        return {
+          respuesta: `Recibí tu mensaje: “${userText}”.\n\n${role}\n\n${resourceLine}\n\nEstoy respondiendo con la información configurada para este asistente.`,
+          tokens: null
+        };
+      }
+
+      function getLocalFallbackData() {
+        const data = JSON.parse(JSON.stringify(MOCK_HANDSHAKE));
+        data.nombre = `Agente #${idAgente}`;
+        data.catalogo_recursos["hub"] = {
+          titulo: "Hub de agentes",
+          tipo: "sheet",
+          descripcion: "Hoja central compartida por la arquitectura de agentes.",
+          url: "https://docs.google.com/spreadsheets/d/1JzUG-etaANxjlYKQW6jkuRryIwSPbzztNgMMkhHTbB4/edit?gid=0#gid=0"
+        };
+        data.catalogo_recursos["ui"] = {
+          titulo: "Interfaz Universal",
+          tipo: "code",
+          descripcion: "Web App de Apps Script usado por esta consola.",
+          url: `${URL_API}?a=${idAgente}`
+        };
+        return data;
+      }
+
+      function simulateApiResponse(action, payload) {
+        return new Promise(resolve => {
+          setTimeout(() => {
+            if (action === 'getAppData') {
+              resolve(MOCK_HANDSHAKE);
+            } else if (action === 'sendMessage') {
+              const idx = Math.floor(Math.random() * MOCK_IA_RESPONSES.length);
+              resolve({
+                respuesta: MOCK_IA_RESPONSES[idx],
+                tokens: Math.floor(Math.random() * 300) + 150
+              });
+            } else {
+              resolve(null);
+            }
+          }, 1200);
+        });
+      }
+
+      // ==========================================
+      // HANDSHAKE EXECUTION
+      // ==========================================
+      async function executeHandshake() {
+        console.log(`[AaaS] Initiating Handshake for idAgente: ${idAgente}`);
+
+        const visibleEndpoint = `${URL_API}?a=${idAgente}`;
+        endpointDisplay.innerText = visibleEndpoint;
+        document.querySelectorAll('.mobile-endpoint-display').forEach(el => el.innerText = visibleEndpoint);
+        setApiStatus("Conectando...", "loading");
+
+        try {
+          await loadHubAgents();
+        } catch (error) {
+          console.warn("[AaaS] No se pudo precargar el directorio del Hub:", error);
+        }
+
+        const data = normalizeAppData(await callAaaS_API('getAppData'));
+
+        if (data) {
+          if (data.source === 'sheets') {
+            setApiStatus("HUB OK", "warning");
+            agentStatusText.innerText = "Recursos cargados; listo para consultar";
+          } else if (apiStatusBadge.innerText !== "SIN CONEXIÓN") {
+            setApiStatus("ONLINE", "online");
+            agentStatusText.innerText = "Listo para recibir instrucciones";
+          }
+
+          activeAgentConfig = {
+            nombre: data.nombre || "Agente Inteligente",
+            descripcion: data.descripcion || data.config_visual?.descripcion || "",
+            system_prompt: data.system_prompt || data.config_visual?.system_prompt || "",
+            color_primario: data.config_visual?.color_primario || "#6366f1",
+            color_secundario: data.config_visual?.color_secundario || "#a855f7",
+            logo_url: data.config_visual?.logo_url || "",
+            border_radius: data.config_visual?.border_radius || "20px"
+          };
+
+          applyVisualConfig(activeAgentConfig);
+          populateCatalog(data.catalogo_recursos);
+        }
+
+        // Fade skeleton out
+        skeletorOverlay.style.animation = "fadeOut 0.45s ease-out forwards";
+        setTimeout(() => skeletorOverlay.classList.add('hidden'), 500);
+
+        // Load chat history
+        loadSession();
+      }
+
+      // ========== FILE ATTACHMENT ==========
+      let currentAttachment = null;
+      const fileUploadInput = document.getElementById('file-upload-input');
+      const btnAttachFile = document.getElementById('btn-attach-file');
+      const attachmentPreview = document.getElementById('attachment-preview');
+      const attachmentName = document.getElementById('attachment-name');
+      const btnRemoveAttachment = document.getElementById('btn-remove-attachment');
+
+      btnAttachFile.addEventListener('click', () => fileUploadInput.click());
+
+      function splitDataUrl(dataUrl) {
+        const match = String(dataUrl || '').match(/^data:([^;]+);base64,(.*)$/);
+        return {
+          mimeType: match ? match[1] : '',
+          base64: match ? match[2] : String(dataUrl || '')
+        };
+      }
+
+      function dataUrlToBytes(dataUrl) {
+        const base64 = splitDataUrl(dataUrl).base64;
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        return bytes;
+      }
+
+      async function extractPdfTextFromDataUrl(dataUrl) {
+        const pdfjsLib = await import('https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.mjs');
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.mjs';
+        const pdf = await pdfjsLib.getDocument({ data: dataUrlToBytes(dataUrl) }).promise;
+        const pages = [];
+        const maxPages = Math.min(pdf.numPages, 30);
+        for (let pageNumber = 1; pageNumber <= maxPages; pageNumber++) {
+          const page = await pdf.getPage(pageNumber);
+          const content = await page.getTextContent();
+          const text = content.items
+            .map(item => item.str || '')
+            .join(' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+          if (text) pages.push(`PÃ¡gina ${pageNumber}: ${text}`);
+        }
+        const suffix = pdf.numPages > maxPages ? `\n\n[Se extrajeron las primeras ${maxPages} de ${pdf.numPages} pÃ¡ginas.]` : '';
+        return `${pages.join('\n\n')}${suffix}`.trim();
+      }
+
+      fileUploadInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          const dataUrl = event.target.result;
+          const parsed = splitDataUrl(dataUrl);
+          currentAttachment = {
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            data: dataUrl,
+            base64: parsed.base64,
+            mimeType: parsed.mimeType || file.type,
+            extractedText: '',
+            extractionError: ''
+          };
+          attachmentName.innerText = file.name;
+          attachmentPreview.classList.remove('hidden');
+          attachmentPreview.classList.add('flex');
+          if ((parsed.mimeType || file.type) === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+            attachmentName.innerText = `${file.name} (leyendo...)`;
+            try {
+              currentAttachment.extractedText = await extractPdfTextFromDataUrl(dataUrl);
+              attachmentName.innerText = file.name;
+              if (!currentAttachment.extractedText) {
+                currentAttachment.extractionError = 'No se pudo extraer texto seleccionable del PDF.';
+                showToast('El PDF se adjuntÃ³, pero no tiene texto seleccionable para extraer.', 'error', 5000);
+              }
+            } catch (error) {
+              currentAttachment.extractionError = error.message || 'No se pudo leer el PDF en el navegador.';
+              attachmentName.innerText = file.name;
+              showToast(`No pude extraer el texto del PDF: ${currentAttachment.extractionError}`, 'error', 7000);
+            }
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+
+      btnRemoveAttachment.addEventListener('click', () => {
+        currentAttachment = null;
+        fileUploadInput.value = '';
+        attachmentPreview.classList.add('hidden');
+        attachmentPreview.classList.remove('flex');
+      });
+
+      // ==========================================
+      // MESSAGE SUBMIT
+      // ==========================================
+      chatForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const text = messageInput.value.trim();
+        if (!text && !currentAttachment) return;
+
+        messageInput.value = "";
+        messageInput.disabled = true;
+
+        let userMsgDisplay = text;
+        if (currentAttachment) {
+          userMsgDisplay += `\n\n*(Archivo adjunto: ${currentAttachment.name})*`;
+        }
+
+        appendMessage('user', userMsgDisplay);
+        chatHistory.push({ sender: 'user', text: userMsgDisplay });
+        saveSession();
+
+        const attachmentToSend = currentAttachment;
+        currentAttachment = null;
+        fileUploadInput.value = '';
+        attachmentPreview.classList.add('hidden');
+        attachmentPreview.classList.remove('flex');
+
+        typingIndicator.classList.remove('hidden');
+        messagesContainer.scrollTo({ top: messagesContainer.scrollHeight, behavior: 'smooth' });
+
+        const payload = { mensaje: text, historial: chatHistory };
+        if (attachmentToSend) {
+          const extractedText = String(attachmentToSend.extractedText || '').trim();
+          const filePrompt = extractedText
+            ? `\n\n[Archivo adjunto real: ${attachmentToSend.name}; tipo: ${attachmentToSend.mimeType || attachmentToSend.type}; tamaÃ±o: ${attachmentToSend.size} bytes. Ya extraje el texto del PDF en el navegador. Responde usando este contenido del documento:\n\n${extractedText.slice(0, 60000)}\n\nFin del contenido extraÃ­do.]`
+            : `\n\n[Archivo adjunto real: ${attachmentToSend.name}; tipo: ${attachmentToSend.mimeType || attachmentToSend.type}; tamaÃ±o: ${attachmentToSend.size} bytes. No se pudo extraer texto en el navegador: ${attachmentToSend.extractionError || 'sin detalle'}. Intenta procesar el base64 enviado en archivoBase64/fileBase64.]`;
+          payload.mensaje = `${text}${filePrompt}`;
+          payload.textoArchivo = extractedText;
+          payload.textoPdf = extractedText;
+          payload.pdfText = extractedText;
+          payload.contenidoArchivo = extractedText;
+          payload.contenidoDocumento = extractedText;
+          payload.archivo = attachmentToSend.data;
+          payload.archivoDataUrl = attachmentToSend.data;
+          payload.archivoBase64 = attachmentToSend.base64;
+          payload.archivoNombre = attachmentToSend.name;
+          payload.archivoTipo = attachmentToSend.type || attachmentToSend.mimeType;
+          payload.archivoMimeType = attachmentToSend.mimeType || attachmentToSend.type;
+          payload.archivoTamano = attachmentToSend.size;
+          payload.file = attachmentToSend.data;
+          payload.fileData = attachmentToSend.data;
+          payload.fileBase64 = attachmentToSend.base64;
+          payload.fileName = attachmentToSend.name;
+          payload.fileType = attachmentToSend.type || attachmentToSend.mimeType;
+          payload.mimeType = attachmentToSend.mimeType || attachmentToSend.type;
+          payload.adjunto = attachmentToSend.data;
+          payload.adjuntoBase64 = attachmentToSend.base64;
+          payload.adjuntoNombre = attachmentToSend.name;
+          payload.documentoBase64 = attachmentToSend.base64;
+          payload.documentoNombre = attachmentToSend.name;
+          payload.tieneArchivo = true;
+        }
+
+        const resp = normalizeMessageResponse(await callAaaS_API('sendMessage', payload));
+        if (attachmentToSend && resp?.respuesta && /no se ha adjuntado|no ha adjuntado|intenta adjuntar|adjunta el|no tengo la capacidad de acceder/i.test(resp.respuesta)) {
+          resp.respuesta = attachmentToSend.extractedText
+            ? `El archivo **${attachmentToSend.name}** sÃ­ se leyÃ³ en el navegador y se enviÃ³ al agente como texto extraÃ­do, pero el backend no lo estÃ¡ incorporando correctamente al prompt final.\n\nPara corregirlo del todo en Apps Script, usa el campo \`textoPdf\`, \`textoArchivo\` o \`contenidoDocumento\` que ahora viaja en el payload y agrÃ©galo al mensaje que mandas al modelo.`
+            : `El archivo **${attachmentToSend.name}** sÃ­ se adjuntÃ³, pero no pude extraer texto seleccionable del PDF en el navegador. Si es un PDF escaneado, hace falta OCR; si tiene texto real, revisa que PDF.js pueda cargar desde internet.`;
+          resp.tokens = resp.tokens || null;
+        }
+
+        typingIndicator.classList.add('hidden');
+        messageInput.disabled = false;
+        messageInput.focus();
+
+        if (resp && resp.respuesta) {
+          appendMessage('ai', resp.respuesta, resp.tokens);
+          chatHistory.push({ sender: 'ai', text: resp.respuesta, tokens: resp.tokens });
+          latestAiResponse = resp.respuesta;
+          saveSession();
+        } else if (!resp) {
+          const errMsg = buildLocalAgentResponse(text).respuesta;
+          appendMessage('ai', errMsg);
+          chatHistory.push({ sender: 'ai', text: errMsg });
+          latestAiResponse = errMsg;
+          saveSession();
+        }
+      });
+
+      // ========== SIDEBAR TABS ==========
+      const sidebarTabsContainer = document.getElementById('sidebar-tabs');
+      const allTabButtons = sidebarTabsContainer ? sidebarTabsContainer.querySelectorAll('[data-tab]') : [];
+      const allTabPanels = {
+        agents: document.getElementById('tab-agents'),
+        history: document.getElementById('tab-history'),
+        resources: document.getElementById('tab-resources')
+      };
+
+      function activateTab(tabName) {
+        allTabButtons.forEach(btn => {
+          if (btn.dataset.tab === tabName) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        });
+        Object.entries(allTabPanels).forEach(([name, panel]) => {
+          if (!panel) return;
+          if (name === tabName) {
+            panel.style.display = 'flex';
+            panel.classList.add('active');
+          } else {
+            panel.style.display = 'none';
+            panel.classList.remove('active');
+          }
+        });
+      }
+
+      allTabButtons.forEach(btn => {
+        btn.addEventListener('click', () => activateTab(btn.dataset.tab));
+      });
+
+      // Ensure agents tab is shown by default
+      activateTab('agents');
+
+      // ========== SIDEBAR TOGGLE ==========
+      const desktopSidebar = document.getElementById('sidebar-panel');
+      btnToggleSidebar.addEventListener('click', () => {
+        if (window.innerWidth >= 1024) {
+          if (desktopSidebar.style.display === 'none') {
+            desktopSidebar.style.display = '';
+          } else {
+            desktopSidebar.style.display = 'none';
+          }
+        } else {
+          mobileSidebarModal.classList.remove('hidden');
+        }
+      });
+      btnCloseMobileSidebar.addEventListener('click', () => mobileSidebarModal.classList.add('hidden'));
+      mobileSidebarModal.addEventListener('click', (e) => {
+        if (e.target === mobileSidebarModal) mobileSidebarModal.classList.add('hidden');
+      });
+
+      // ========== BOOT ==========
+      executeHandshake();
+    });
+  </script>
+</body>
+</html>
