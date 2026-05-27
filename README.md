@@ -1,7 +1,7 @@
 # Ecosistema de Agentes Inteligentes (AaaS)
 ### Consola Universal y Chasis de Agentes
 
-Esta es la consola de usuario e interfaz de control para el ecosistema **AaaS (Agent as a Service)**. El sistema permite orquestar de forma dinámica múltiples agentes de inteligencia artificial especializados a través de una arquitectura distribuida de hojas de cálculo de Google (Hub-Spoke) y una API intermedia en Google Apps Script.
+Esta es la consola de usuario e interfaz de control para el ecosistema **AaaS (Agent as a Service)**. El sistema permite orquestar de forma dinámica y sincronizada en tiempo real a múltiples agentes de inteligencia artificial especializados, adaptándose visualmente a cada asistente y facilitando la interacción mediante diversas herramientas integradas.
 
 ---
 
