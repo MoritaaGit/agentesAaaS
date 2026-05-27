@@ -341,92 +341,92 @@
   <!-- ======================================= -->
   <!-- LANDING WELCOME SCREEN (NEW)            -->
   <!-- ======================================= -->
-  <div id="landing-screen" class="fixed inset-0 z-[9000] flex flex-col items-center justify-center p-4 md:p-8 overflow-y-auto bg-[#050609]">
+  <div id="landing-screen" class="fixed inset-0 z-[9000] flex flex-col items-center justify-center p-4 md:p-6 overflow-y-auto bg-[#050609]">
     <!-- Background Glowing Orbs inside landing -->
     <div class="absolute w-[450px] h-[450px] rounded-full bg-indigo-500/10 filter blur-[100px] -top-20 -left-20 pointer-events-none"></div>
     <div class="absolute w-[450px] h-[450px] rounded-full bg-purple-500/10 filter blur-[100px] -bottom-20 -right-20 pointer-events-none"></div>
 
-    <div class="max-w-4xl w-full text-center relative z-10 space-y-8 animate__animated animate__fadeIn">
+    <div class="max-w-4xl w-full text-center relative z-10 space-y-5 animate__animated animate__fadeIn">
       <!-- Logo & Header -->
-      <div class="flex flex-col items-center gap-3">
-        <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-          <i data-lucide="cpu" class="w-8 h-8 text-white"></i>
+      <div class="flex flex-col items-center gap-2">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <i data-lucide="cpu" class="w-6 h-6 text-white"></i>
         </div>
-        <h1 class="font-title text-4xl md:text-5xl font-extrabold text-white tracking-tight bg-gradient-to-r from-white via-gray-300 to-indigo-400 bg-clip-text text-transparent">
+        <h1 class="font-title text-3xl md:text-4xl font-extrabold text-white tracking-tight bg-gradient-to-r from-white via-gray-300 to-indigo-400 bg-clip-text text-transparent">
           AaaS Engine Console
         </h1>
-        <p class="text-xs md:text-sm text-indigo-400 font-semibold tracking-widest uppercase">
+        <p class="text-xs text-indigo-400 font-semibold tracking-widest uppercase">
           Universal Agent Chassis
         </p>
       </div>
 
       <!-- Main Description -->
-      <div class="space-y-4 max-w-2xl mx-auto">
-        <h2 class="font-title text-xl md:text-2xl font-bold text-gray-200">
+      <div class="space-y-2 max-w-2xl mx-auto">
+        <h2 class="font-title text-lg md:text-xl font-bold text-gray-200">
           Orquesta tu propio ecosistema de Agentes de IA
         </h2>
-        <p class="text-gray-400 text-sm md:text-base leading-relaxed">
-          Bienvenido a la consola universal **AaaS (Agent as a Service)**. Este chasis de agentes te permite gestionar asistentes de inteligencia artificial especializados sincronizados en tiempo real a partir de hojas de cálculo de Google.
+        <p class="text-gray-400 text-xs md:text-sm leading-relaxed">
+          Bienvenido a la consola universal **AaaS (Agent as a Service)**. Este chasis de agentes te permite gestionar asistentes de inteligencia artificial especializados sincronizados en tiempo real.
         </p>
       </div>
 
       <!-- Features Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto text-left">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-3xl mx-auto text-left">
         <!-- Card 1 -->
-        <div class="glass-card p-5 border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all rounded-2xl flex gap-4">
-          <div class="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 flex-shrink-0 mt-1">
-            <i data-lucide="bot-share" class="w-5 h-5"></i>
+        <div class="glass-card p-4 border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all rounded-2xl flex gap-3">
+          <div class="w-8 h-8 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 flex-shrink-0 mt-0.5">
+            <i data-lucide="bot-share" class="w-4 h-4"></i>
           </div>
           <div>
             <h3 class="font-title font-bold text-white text-sm">Arquitectura Hub-Spoke</h3>
-            <p class="text-xs text-gray-400 mt-1 leading-relaxed">Conecta múltiples agentes autónomos gestionados desde Google Sheets. Cambia de asistente con un clic.</p>
+            <p class="text-xs text-gray-400 mt-1 leading-relaxed">Conecta múltiples agentes autónomos. Cambia de asistente con un clic.</p>
           </div>
         </div>
 
         <!-- Card 2 -->
-        <div class="glass-card p-5 border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all rounded-2xl flex gap-4">
-          <div class="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 flex-shrink-0 mt-1">
-            <i data-lucide="folder-git" class="w-5 h-5"></i>
+        <div class="glass-card p-4 border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all rounded-2xl flex gap-3">
+          <div class="w-8 h-8 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 flex-shrink-0 mt-0.5">
+            <i data-lucide="folder-git" class="w-4 h-4"></i>
           </div>
           <div>
             <h3 class="font-title font-bold text-white text-sm">Catálogo de Recursos</h3>
-            <p class="text-xs text-gray-400 mt-1 leading-relaxed">Inyecta documentos de referencia, plantillas de Google Sheets y códigos directamente en el prompt del LLM.</p>
+            <p class="text-xs text-gray-400 mt-1 leading-relaxed">Inyecta documentos de referencia y códigos directamente en el prompt del LLM.</p>
           </div>
         </div>
 
         <!-- Card 3 -->
-        <div class="glass-card p-5 border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all rounded-2xl flex gap-4">
-          <div class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 flex-shrink-0 mt-1">
-            <i data-lucide="file-up" class="w-5 h-5"></i>
+        <div class="glass-card p-4 border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all rounded-2xl flex gap-3">
+          <div class="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 flex-shrink-0 mt-0.5">
+            <i data-lucide="file-up" class="w-4 h-4"></i>
           </div>
           <div>
             <h3 class="font-title font-bold text-white text-sm">Procesamiento de PDFs</h3>
-            <p class="text-xs text-gray-400 mt-1 leading-relaxed">Sube archivos locales y extrae su contenido con PDF.js de forma 100% segura en tu navegador.</p>
+            <p class="text-xs text-gray-400 mt-1 leading-relaxed">Sube archivos locales y extrae su contenido de forma 100% segura en tu navegador.</p>
           </div>
         </div>
 
         <!-- Card 4 -->
-        <div class="glass-card p-5 border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all rounded-2xl flex gap-4">
-          <div class="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-400 flex-shrink-0 mt-1">
-            <i data-lucide="mic" class="w-5 h-5"></i>
+        <div class="glass-card p-4 border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all rounded-2xl flex gap-3">
+          <div class="w-8 h-8 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-400 flex-shrink-0 mt-0.5">
+            <i data-lucide="mic" class="w-4 h-4"></i>
           </div>
           <div>
             <h3 class="font-title font-bold text-white text-sm">Dictado y Audio Reader</h3>
-            <p class="text-xs text-gray-400 mt-1 leading-relaxed">Conversa usando tu micrófono y reproduce las respuestas de texto con voz en tiempo real.</p>
+            <p class="text-xs text-gray-400 mt-1 leading-relaxed">Conversa usando tu micrófono y reproduce las respuestas con voz en tiempo real.</p>
           </div>
         </div>
       </div>
 
       <!-- Action Button -->
-      <div class="pt-4">
-        <button id="btn-start-landing" class="px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-600 to-indigo-500 hover:brightness-110 text-white font-extrabold text-sm tracking-wide shadow-lg shadow-indigo-500/25 transition-all flex items-center gap-2.5 mx-auto border border-white/10 hover:scale-[1.02]">
+      <div class="pt-2">
+        <button id="btn-start-landing" class="px-6 py-3 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-600 to-indigo-500 hover:brightness-110 text-white font-extrabold text-sm tracking-wide shadow-lg shadow-indigo-500/25 transition-all flex items-center gap-2.5 mx-auto border border-white/10 hover:scale-[1.02]">
           Comenzar Consola
           <i data-lucide="arrow-right" class="w-4 h-4"></i>
         </button>
       </div>
 
       <!-- Footer Info -->
-      <div class="text-[10px] text-gray-600 flex items-center justify-center gap-1.5 pt-6">
+      <div class="text-[10px] text-gray-600 flex items-center justify-center gap-1.5 pt-3">
         <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
         <span>Consola segura regulada bajo la especificación AaaS Engine v1</span>
       </div>
