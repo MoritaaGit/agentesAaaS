@@ -2187,7 +2187,9 @@
         typingIndicator.classList.remove('hidden');
         messagesContainer.scrollTo({ top: messagesContainer.scrollHeight, behavior: 'smooth' });
 
-        const payload = { mensaje: text, historial: chatHistory };
+        // Limit history to the last 10 messages to prevent huge payloads from slowing down the AI response
+        const recentHistory = chatHistory.length > 10 ? chatHistory.slice(-10) : chatHistory;
+        const payload = { mensaje: text, historial: recentHistory };
         if (attachmentToSend) {
           const extractedText = String(attachmentToSend.extractedText || '').trim();
           const filePrompt = extractedText
